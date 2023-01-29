@@ -37,7 +37,14 @@ def load_user(user_id):
 
 @users.route("/")
 def home():
-    return render_template('index.html', title='Home')
+    con = sqlite3.connect("auth.db")
+    con.row_factory = sqlite3.Row
+
+    cur = con.cursor()
+    cur.execute("SELECT user_id,name,username,email FROM users")
+
+    rows = cur.fetchall()
+    return render_template('index.html', title='Home',rows=rows)
 
 @users.route("/register", methods=['GET', 'POST'])
 def register():

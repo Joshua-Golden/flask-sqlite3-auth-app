@@ -1,0 +1,137 @@
+import sqlite3
+
+def get_data(data):
+    username = data['username']
+    email = data['email']
+    password = data['password']
+    name = data['name']
+
+    query_data = (username,email,password,name)
+    print(query_data)
+    return query_data
+
+
+def validate_user(data):    
+    msg = {'username':username_msg,
+            'email':email_msg,
+            'password':password_msg,
+            'name':name_msg,
+    }
+    try:
+        with sqlite3.connect("auth.db") as con:
+            cur = con.cursor()
+            cur.execute("SELECT username FROM users WHERE username=? and email=? and password=? and name=?", (data,))
+
+            # checks for username
+            query_result = cur.fetchall()
+            if query_result[0] == data[0]:
+                does_username_match = True
+                username_msg = "This username is a match."
+                msg.insert(0, username_msg)
+            else:
+                does_username_match = False
+                username_msg = "This username is available."
+                msg.insert(0, username_msg)
+            
+            # checks for email
+            if query_result[1] == data[1]:
+                does_email_match = True
+                email_msg = "This email is a match."    
+                msg.insert(0,email_msg)    
+            else:
+                does_email_match = False
+                email_msg = "This email is available."      
+                msg.insert(0,email_msg)
+
+            # checks for password
+            if query_result[2] == data[2]:
+                does_password_match = True
+                password_msg = "The credentials match."    
+                msg.insert(0,password_msg)    
+            else:
+                does_password_match = False
+                password_msg = "This credentials do not match."      
+                msg.insert(0,password_msg)
+
+            # checks for name
+            if query_result[3] == data[3]:
+                does_name_match = True
+                name_msg = "The credentials match."    
+                msg.insert(0,name_msg)    
+            else:
+                does_name_match = False
+                name_msg = "This credentials do not match."      
+                msg.insert(0,name_msg)
+
+    except:
+        result = "Error in query operation."
+        msg.insert(0,result)
+    finally:
+        con.close()
+        return msg,does_username_match,does_email_match,does_password_match
+
+def register_user(data):
+    
+    username = data['username']
+    email = data['email']
+    password = data['password']
+    name = data['name']
+
+    msg, does_username_match,does_email_match,does_password_match= validate_user(data)
+
+    if does_username_match == False and does_email_match == False:
+        try:
+            with sqlite3.connect("auth.db") as con:
+                cur = con.cursor()
+                cur.execute("""INSERT INTO "users" ("username", "email", "password", "name") VALUES (?, ?, ?, ?)""", (username, email, password, name))
+                con.commit()
+                success_msg = "Table entry inserted successfully."    
+                msg['success_msg']=success_msg     
+        except: 
+            error_msg = "Error in insert operation."   
+            msg['error_msg']=error_msg   
+            con.rollback()
+        finally:
+            con.close()
+            print(msg)
+            return msg
+
+def login_user(data):       
+    msg, does_username_match,does_email_match,does_password_match= validate_user(data)
+
+    if does_username_match == True and does_password_match == True:
+        can_login = True
+        success_msg = "User credentials match."    
+        msg['success_msg']=success_msg     
+    else:
+        can_login = False
+        error_msg = "User credentials do not match."
+        msg['error_msg']=error_msg     
+    
+    return msg, can_login 
+
+
+
+
+
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.home'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        
+        # pull username
+        msg, is_username_available, username,pwrd = validate_username(username)
+
+        data = {'username':username,
+                    'password':password}
+
+        if pwrd and bcrypt.check_password_hash(pwrd, form.password.data):
+            login_user(data, remember=form.remember.data)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('main.home'))
+        else:
+            flash('Login Unsuccessful. Please check email and password', 'danger')
+    return render_template('login.html', title='Login', form=form)
