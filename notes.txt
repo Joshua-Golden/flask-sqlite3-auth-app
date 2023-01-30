@@ -1,0 +1,2 @@
+//Password Hashing with Bcrypt\\
+- Setup up your password column as 'NUMERIC'.
